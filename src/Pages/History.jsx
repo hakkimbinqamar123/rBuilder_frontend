@@ -4,7 +4,7 @@ import Paper from '@mui/material/Paper'
 import Divider from '@mui/material/Divider'
 import Button from '@mui/material/Button'
 import Link from '@mui/material/Link'
-import { deleteResumeAPI, getAllResumesAPI } from '../service/allApI'
+import { deleteResumeAPI, getAllResumesAPI } from '../service/allAPI'
 
 function History() {
 
