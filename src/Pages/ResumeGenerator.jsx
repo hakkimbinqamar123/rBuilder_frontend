@@ -1,37 +1,104 @@
-import React from 'react'
-import { IoDocumentSharp } from "react-icons/io5";
-import { FaFileDownload } from "react-icons/fa";
+import React from 'react';
+import { Box, Typography, Button, Container, Grid, Paper } from '@mui/material';
+import { MdDocumentScanner, MdFileDownload, MdArrowForward } from "react-icons/md";
 import { Link } from 'react-router-dom';
 
 function ResumeGenerator() {
     return (
-        <>
-            <div className="container mt-5">
-                <h1 className='text-center'>Create a job-winning Resume in minutes</h1>
-                <div className="row mt-5 justify-content-center">
-                    <div className="col-12 col-md-5 mt-5">
-                        <div className='shadow rounded p-4 text-center'>
-                            <IoDocumentSharp className='fs-1 text-primary mb-2'/>
-                            <h1>Add your information</h1>
-                            <p>Add pre-written examples to each section</p>
-                            <h4>step 1</h4>
-                        </div>
-                    </div>
-                    <div className="col-12 col-md-5 mt-5 mb-5">
-                        <div className='shadow rounded p-4 text-center'>
-                            <FaFileDownload className='fs-1 text-success mb-2'/>
-                            <h1>Download your Resume</h1>
-                            <p>Download and start applying</p>
-                            <h4>Step 2</h4>
-                        </div>
-                    </div>
-                    <div className="align-items-center d-flex justify-content-center text-center mt-5 my-3">
-                        <Link to={"/form"} className="btn btn-primary mb-5">LET'S START</Link>
-                    </div>
-                </div>
-            </div>
-        </>
-    )
+        <Box sx={{ minHeight: '100vh', pt: 15, pb: 10, position: 'relative' }}>
+            <Box sx={{ position: 'fixed', top: '10%', left: '50%', transform: 'translateX(-50%)', width: 600, height: 600, background: 'radial-gradient(circle, rgba(0,242,254,0.08) 0%, transparent 60%)', borderRadius: '50%', filter: 'blur(50px)', zIndex: 0 }} />
+
+            <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
+                <Typography variant="h2" fontWeight="800" gutterBottom className="animate-fade-in-up">
+                    Create a Job-Winning <br />
+                    <span className="text-gradient-primary">Resume in Minutes</span>
+                </Typography>
+                <Typography variant="h6" color="text.secondary" sx={{ mb: 8, fontWeight: 400 }} className="animate-fade-in-up stagger-1">
+                    Follow our simple two-step process to build and download your professional resume.
+                </Typography>
+
+                <Grid container spacing={4} justifyContent="center" className="animate-fade-in-up stagger-2">
+                    <Grid item xs={12} sm={6}>
+                        <Paper
+                            sx={{
+                                p: 5,
+                                height: '100%',
+                                borderRadius: '24px',
+                                background: 'rgba(15, 23, 42, 0.6)',
+                                backdropFilter: 'blur(16px)',
+                                border: '1px solid rgba(255, 255, 255, 0.08)',
+                                transition: 'all 0.3s ease',
+                                '&:hover': {
+                                    transform: 'translateY(-5px)',
+                                    borderColor: 'rgba(0, 242, 254, 0.3)',
+                                    boxShadow: '0 15px 30px -10px rgba(0, 242, 254, 0.2)'
+                                }
+                            }}
+                        >
+                            <Box sx={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(0, 242, 254, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 3 }}>
+                                <MdDocumentScanner size={40} color="#00f2fe" />
+                            </Box>
+                            <Typography variant="h5" fontWeight="bold" color="white" gutterBottom>
+                                Add Your Details
+                            </Typography>
+                            <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+                                Fill in our easy-to-use form with your personal info, experience, and skills.
+                            </Typography>
+                            <Typography variant="overline" sx={{ color: '#00f2fe', letterSpacing: '2px', fontWeight: 'bold' }}>
+                                STEP 1
+                            </Typography>
+                        </Paper>
+                    </Grid>
+
+                    <Grid item xs={12} sm={6}>
+                        <Paper
+                            sx={{
+                                p: 5,
+                                height: '100%',
+                                borderRadius: '24px',
+                                background: 'rgba(15, 23, 42, 0.6)',
+                                backdropFilter: 'blur(16px)',
+                                border: '1px solid rgba(255, 255, 255, 0.08)',
+                                transition: 'all 0.3s ease',
+                                '&:hover': {
+                                    transform: 'translateY(-5px)',
+                                    borderColor: 'rgba(16, 185, 129, 0.3)',
+                                    boxShadow: '0 15px 30px -10px rgba(16, 185, 129, 0.2)'
+                                }
+                            }}
+                        >
+                            <Box sx={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 3 }}>
+                                <MdFileDownload size={40} color="#10b981" />
+                            </Box>
+                            <Typography variant="h5" fontWeight="bold" color="white" gutterBottom>
+                                Download & Apply
+                            </Typography>
+                            <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+                                Instantly export your resume to a professional PDF layout ready for ATS.
+                            </Typography>
+                            <Typography variant="overline" sx={{ color: '#10b981', letterSpacing: '2px', fontWeight: 'bold' }}>
+                                STEP 2
+                            </Typography>
+                        </Paper>
+                    </Grid>
+                </Grid>
+
+                <Box mt={8} className="animate-fade-in-up stagger-3">
+                    <Button 
+                        component={Link} 
+                        to="/form" 
+                        variant="contained" 
+                        color="primary" 
+                        size="large"
+                        endIcon={<MdArrowForward />}
+                        sx={{ px: 6, py: 2, fontSize: '1.2rem', borderRadius: '16px' }}
+                    >
+                        Let's Start Building
+                    </Button>
+                </Box>
+            </Container>
+        </Box>
+    );
 }
 
-export default ResumeGenerator
+export default ResumeGenerator;

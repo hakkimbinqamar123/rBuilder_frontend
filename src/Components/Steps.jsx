@@ -1,303 +1,340 @@
-import React, { useState } from 'react'
-import Box from '@mui/material/Box';
-import Stepper from '@mui/material/Stepper';
-import Step from '@mui/material/Step';
-import StepLabel from '@mui/material/StepLabel';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
-import TextField from '@mui/material/TextField';
+import React, { useState } from 'react';
+import { Box, Stepper, Step, StepLabel, StepConnector, stepConnectorClasses, Button, Typography, TextField, LinearProgress, Grid, Chip } from '@mui/material';
 import { addResumeAPI } from '../service/allAPI';
-import Swal from 'sweetalert2'
+import Swal from 'sweetalert2';
+import { styled } from '@mui/material/styles';
 
-const steps = ['Basic Information', 'Contact Details', 'Education Details', 'Work Experience', 'Skills & Certifications', 'Review & Submit'];
+const steps = ['Basic', 'Contact', 'Education', 'Experience', 'Skills', 'Summary'];
+
+// Customizing the Stepper Connector for a premium look
+const CustomConnector = styled(StepConnector)(({ theme }) => ({
+  [`&.${stepConnectorClasses.alternativeLabel}`]: {
+    top: 10,
+    left: 'calc(-50% + 16px)',
+    right: 'calc(50% + 16px)',
+  },
+  [`&.${stepConnectorClasses.active}`]: {
+    [`& .${stepConnectorClasses.line}`]: {
+      borderColor: '#00f2fe',
+    },
+  },
+  [`&.${stepConnectorClasses.completed}`]: {
+    [`& .${stepConnectorClasses.line}`]: {
+      borderColor: '#00f2fe',
+    },
+  },
+  [`& .${stepConnectorClasses.line}`]: {
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderTopWidth: 2,
+    borderRadius: 1,
+    transition: 'border-color 0.3s ease',
+  },
+}));
 
 function Steps({ setUserInput, userInput, setIsResumeAdded, setResumeId }) {
+    const [activeStep, setActiveStep] = useState(0);
+    const [inputSkill, setInputSkill] = useState("");
 
-    const [activeStep, setActiveStep] = React.useState(0);
-    const [skipped, setSkipped] = React.useState(new Set());
-
-    const [inputSkill, setInputSkill] = useState("")
-
-
-    const addSkill = (inputSkill) => {
-        console.log("user input skill : " + inputSkill)
-        if (inputSkill) {
-            if (userInput.skill.includes(inputSkill)) {
-                alert("Given skill already exists.... Add another..")
+    const addSkill = (newSkill) => {
+        if (newSkill && newSkill.trim() !== "") {
+            if (userInput.skill.includes(newSkill.trim())) {
+                Swal.fire({ icon: 'warning', title: 'Oops', text: 'Skill already exists!', background: '#0f172a', color: '#fff' });
             } else {
-                setUserInput({ ...userInput, skill: [...userInput.skill, inputSkill] })
+                setUserInput({ ...userInput, skill: [...userInput.skill, newSkill.trim()] });
+                setInputSkill("");
             }
         }
-    }
-
-    const skillsSuggectionArray = ["HTML", "CSS", "JavaScript", "React", "MongoDB", "Node"]
-
-    const isStepOptional = (step) => {
-        return step === 1;
     };
 
-    const isStepSkipped = (step) => {
-        return skipped.has(step);
+    const removeSkill = (skillToRemove) => {
+        setUserInput({ ...userInput, skill: userInput.skill.filter(item => item !== skillToRemove) });
     };
 
-    const handleNext = () => {
-        let newSkipped = skipped;
-        if (isStepSkipped(activeStep)) {
-            newSkipped = new Set(newSkipped.values());
-            newSkipped.delete(activeStep);
-        }
+    const skillsSuggestionArray = ["HTML", "CSS", "JavaScript", "React", "Node.js", "MongoDB", "Python", "SQL", "Git", "UI/UX", "TypeScript", "Next.js", "Docker", "AWS"];
 
-        setActiveStep((prevActiveStep) => prevActiveStep + 1);
-        setSkipped(newSkipped);
-    };
-
-    const handleBack = () => {
-        setActiveStep((prevActiveStep) => prevActiveStep - 1);
-    };
-
-    const handleSkip = () => {
-        if (!isStepOptional(activeStep)) {
-            // You probably want to guard against something like this,
-            // it should never occur unless someone's actively trying to break something.
-            throw new Error("You can't skip a step that isn't optional.");
-        }
-
-        setActiveStep((prevActiveStep) => prevActiveStep + 1);
-        setSkipped((prevSkipped) => {
-            const newSkipped = new Set(prevSkipped.values());
-            newSkipped.add(activeStep);
-            return newSkipped;
-        });
-    };
-
-    const handleReset = () => {
-        setActiveStep(0);
-    };
-
-    const removeSkill = (skill) => {
-        setUserInput({ ...userInput, skill: userInput.skill.filter(item => item != skill) })
-    }
-
-    const renderStepArrayContent = (stepCount) => {
-        switch (stepCount) {
-            case 0: return (
-                <div>
-                    <h1>Personal Details</h1>
-                    <div className='row p-3'>
-                        <TextField value={userInput.professionalData.name} onChange={(e) => setUserInput({ ...userInput, professionalData: { ...userInput.professionalData, name: e.target.value } })} id="full-name" label="full-name"
-                            variant="standard" />
-                        <TextField value={userInput.professionalData.JobTitle} onChange={(e) => setUserInput({ ...userInput, professionalData: { ...userInput.professionalData, JobTitle: e.target.value } })} id="job-title" label="job-title"
-                            variant="standard" />
-                        <TextField value={userInput.professionalData.location} onChange={(e) => setUserInput({ ...userInput, professionalData: { ...userInput.professionalData, location: e.target.value } })} id="location" label="location"
-                            variant="standard" />
-                    </div>
-                </div>
-            )
-            case 1: return (
-                <div>
-                    <h1>Contact Details</h1>
-                    <div className='row p-3'>
-                        <TextField value={userInput.professionalData.email} onChange={(e) => setUserInput({ ...userInput, professionalData: { ...userInput.professionalData, email: e.target.value } })} id="email" label="Email"
-                            variant="standard" />
-                        <TextField value={userInput.professionalData.phone} onChange={(e) => setUserInput({
-                            ...userInput, professionalData: {
-                                ...userInput.professionalData, phone: e.target.value
-                            }
-                        })} id="phone-number" label="Phone-Number"
-                            variant="standard" />
-                        <TextField value={userInput.professionalData.github} onChange={(e) => setUserInput({
-                            ...userInput, professionalData: {
-                                ...userInput.professionalData, github: e.target.value
-                            }
-                        })} id="github" label="GitHub Profile Link"
-                            variant="standard" />
-                        <TextField value={userInput.professionalData.linkedIn} onChange={(e) => setUserInput({ ...userInput, professionalData: { ...userInput.professionalData, linkedIn: e.target.value } })} id="linkedin" label="Linkedin Profile Link"
-                            variant="standard" />
-                        <TextField value={userInput.professionalData.portfolio} onChange={(e) => setUserInput({ ...userInput, professionalData: { ...userInput.professionalData, portfolio: e.target.value } })} id="portfolio" label="Portfolio Profile Link"
-                            variant="standard" />
-                    </div>
-                </div>
-            )
-            case 2: return (
-                <div>
-                    <h1>Education Details</h1>
-                    <div className='row p-3'>
-                        <TextField value={userInput.educatinalData.course} onChange={(e) => setUserInput({
-                            ...userInput, educatinalData:
-                                { ...userInput.educatinalData, course: e.target.value }
-                        })} id="course-name" label="Course Name"
-                            variant="standard" />
-                        <TextField value={userInput.educatinalData.college} onChange={(e) => setUserInput({
-                            ...userInput, educatinalData:
-                                { ...userInput.educatinalData, college: e.target.value }
-                        })} id="college-name" label="College-Name"
-                            variant="standard" />
-                        <TextField value={userInput.educatinalData.university} onChange={(e) => setUserInput({
-                            ...userInput, educatinalData:
-                                { ...userInput.educatinalData, university: e.target.value }
-                        })} id="university" label="Univarsity"
-                            variant="standard" />
-                        <TextField value={userInput.educatinalData.year} onChange={(e) => setUserInput({
-                            ...userInput, educatinalData:
-                                { ...userInput.educatinalData, year: e.target.value }
-                        })} id="passout" label="Year of Passout"
-                            variant="standard" />
-                    </div>
-                </div>
-            )
-            case 3: return (
-                <div>
-                    <h1>Professional Details</h1>
-                    <div className='row p-3'>
-                        <TextField value={userInput.experience.jobRole} onChange={(e) => setUserInput({
-                            ...userInput, experience:
-                                { ...userInput.experience, jobRole: e.target.value }
-                        })} id="job-internship" label="Job or Internship"
-                            variant="standard" />
-                        <TextField value={userInput.experience.company} onChange={(e) => setUserInput({
-                            ...userInput, experience:
-                                { ...userInput.experience, company: e.target.value }
-                        })} id="company-name" label="Company Name"
-                            variant="standard" />
-                        <TextField value={userInput.experience.jobLocation} onChange={(e) => setUserInput({
-                            ...userInput, experience:
-                                { ...userInput.experience, jobLocation: e.target.value }
-                        })} id="location" label="Location"
-                            variant="standard" />
-                        <TextField value={userInput.experience.duration} onChange={(e) => setUserInput({
-                            ...userInput, experience:
-                                { ...userInput.experience, duration: e.target.value }
-                        })} id="duration" label="Duration"
-                            variant="standard" />
-                    </div>
-                </div>
-            )
-            case 4: return (
-                <div>
-                    <h1>Skills</h1>
-                    <div className='row p-3'>
-                        <div className="d-flex align-items-center justify-content-center">
-                            <TextField value={inputSkill} onChange={(e) => setInputSkill(e.target.value)} sx={{ width: "550px" }} multiline rows={5} id="" label="Enter Skills"
-                                variant="standard" />
-                            <Button onClick={() => addSkill(inputSkill)} variant='outlined'>ADD</Button>
-                        </div>
-                        <div className='mt-4'>
-                            <h4>Suggections :</h4>
-                            <div className='d-flex gap-3 mt-3 flex-wrap'>
-                                {
-                                    skillsSuggectionArray.map((userSkill) => (
-                                        <Button key={userSkill} onClick={() => addSkill(userSkill)} variant='contained'>{userSkill}</Button>
-                                    ))
-                                }
-
-                            </div>
-                        </div>
-                        <div className='mt-3'>
-                            <h4>Added Skils :</h4>
-                            <h4>
-                                {
-                                    userInput.skill.map(item => (
-                                        <span key={item} className="btn btn-primary me-3 mb-2">{item} <button onClick={() => removeSkill(item)} className='text-light btn'>X</button></span>
-                                    ))
-                                }
-                            </h4>
-                        </div>
-                    </div>
-                </div>
-            )
-            case 5: return (
-                <div>
-                    <h1>Professional Summary</h1>
-                    <div className='row p-3'>
-                        <TextField value={userInput.summary} onChange={(e) => setUserInput({ ...userInput, summary: e.target.value })} multiline rows={5} id="" label="Write a short summary of yourself"
-                            variant="standard" />
-                    </div>
-                </div>
-            )
-        }
-    }
+    const handleNext = () => setActiveStep((prev) => prev + 1);
+    const handleBack = () => setActiveStep((prev) => prev - 1);
+    const handleReset = () => setActiveStep(0);
 
     const handleAddResume = async () => {
-        const { name, JobTitle, location, email, phone } = userInput.professionalData
-        if (name && JobTitle && location && email && phone) {
-            const result = await addResumeAPI(userInput)
-            setIsResumeAdded(true)
-            setResumeId(result.data.id)
-            Swal.fire({
-                title: "Good job!",
-                text: "Resume Added Successfully!",
-                icon: "success"
-            });
+        const { name, JobTitle, email, phone } = userInput.professionalData;
+        if (name && JobTitle && email && phone) {
+            const result = await addResumeAPI(userInput);
+            setIsResumeAdded(true);
+            setResumeId(result.data.id);
+            Swal.fire({ title: "Success!", text: "Resume generated successfully!", icon: "success", confirmButtonColor: '#00f2fe', background: '#0f172a', color: '#fff' });
         } else {
-            Swal.fire({
-                icon: "error",
-                title: "Oops...",
-                text: "Error Resume added failed",
-            });
+            Swal.fire({ icon: "error", title: "Missing Fields", text: "Please fill in essential details like Name, Title, Email, and Phone.", confirmButtonColor: '#ff0844', background: '#0f172a', color: '#fff' });
         }
-    }
+    };
+
+    const calculateCompleteness = () => {
+        let filled = 0;
+        const total = 9;
+        if (userInput.professionalData?.name?.trim()) filled++;
+        if (userInput.professionalData?.email?.trim()) filled++;
+        if (userInput.professionalData?.phone?.trim()) filled++;
+        if (userInput.professionalData?.location?.trim()) filled++;
+        if (userInput.educatinalData?.course?.trim()) filled++;
+        if (userInput.educatinalData?.college?.trim()) filled++;
+        if (userInput.experience?.jobRole?.trim()) filled++;
+        if (userInput.experience?.company?.trim()) filled++;
+        if (userInput.skill && userInput.skill.length > 0) filled++;
+        return Math.round((filled / total) * 100);
+    };
+
+    const renderStepContent = (stepIndex) => {
+        switch (stepIndex) {
+            case 0: return (
+                <Grid container spacing={3} className="animate-fade-in-up">
+                    <Grid item xs={12}>
+                        <Typography variant="h5" fontWeight="bold" color="white" mb={2}>Personal Details</Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                        <TextField fullWidth label="Full Name" variant="outlined" value={userInput.professionalData.name} onChange={(e) => setUserInput({ ...userInput, professionalData: { ...userInput.professionalData, name: e.target.value } })} />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                        <TextField fullWidth label="Job Title" variant="outlined" value={userInput.professionalData.JobTitle} onChange={(e) => setUserInput({ ...userInput, professionalData: { ...userInput.professionalData, JobTitle: e.target.value } })} />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField fullWidth label="Location (City, Country)" variant="outlined" value={userInput.professionalData.location} onChange={(e) => setUserInput({ ...userInput, professionalData: { ...userInput.professionalData, location: e.target.value } })} />
+                    </Grid>
+                </Grid>
+            );
+            case 1: return (
+                <Grid container spacing={3} className="animate-fade-in-up">
+                    <Grid item xs={12}>
+                        <Typography variant="h5" fontWeight="bold" color="white" mb={2}>Contact Information</Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                        <TextField fullWidth label="Email" type="email" variant="outlined" value={userInput.professionalData.email} onChange={(e) => setUserInput({ ...userInput, professionalData: { ...userInput.professionalData, email: e.target.value } })} />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                        <TextField fullWidth label="Phone Number" variant="outlined" value={userInput.professionalData.phone} onChange={(e) => setUserInput({ ...userInput, professionalData: { ...userInput.professionalData, phone: e.target.value } })} />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField fullWidth label="LinkedIn URL" variant="outlined" value={userInput.professionalData.linkedIn} onChange={(e) => setUserInput({ ...userInput, professionalData: { ...userInput.professionalData, linkedIn: e.target.value } })} />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                        <TextField fullWidth label="GitHub URL" variant="outlined" value={userInput.professionalData.github} onChange={(e) => setUserInput({ ...userInput, professionalData: { ...userInput.professionalData, github: e.target.value } })} />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                        <TextField fullWidth label="Portfolio / Website URL" variant="outlined" value={userInput.professionalData.portfolio} onChange={(e) => setUserInput({ ...userInput, professionalData: { ...userInput.professionalData, portfolio: e.target.value } })} />
+                    </Grid>
+                </Grid>
+            );
+            case 2: return (
+                <Grid container spacing={3} className="animate-fade-in-up">
+                    <Grid item xs={12}>
+                        <Typography variant="h5" fontWeight="bold" color="white" mb={2}>Education Details</Typography>
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField fullWidth label="Degree / Course (e.g. B.Sc. Computer Science)" variant="outlined" value={userInput.educatinalData.course} onChange={(e) => setUserInput({ ...userInput, educatinalData: { ...userInput.educatinalData, course: e.target.value } })} />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField fullWidth label="College / Institute" variant="outlined" value={userInput.educatinalData.college} onChange={(e) => setUserInput({ ...userInput, educatinalData: { ...userInput.educatinalData, college: e.target.value } })} />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                        <TextField fullWidth label="University" variant="outlined" value={userInput.educatinalData.university} onChange={(e) => setUserInput({ ...userInput, educatinalData: { ...userInput.educatinalData, university: e.target.value } })} />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                        <TextField fullWidth label="Graduation Year" variant="outlined" value={userInput.educatinalData.year} onChange={(e) => setUserInput({ ...userInput, educatinalData: { ...userInput.educatinalData, year: e.target.value } })} />
+                    </Grid>
+                </Grid>
+            );
+            case 3: return (
+                <Grid container spacing={3} className="animate-fade-in-up">
+                    <Grid item xs={12}>
+                        <Typography variant="h5" fontWeight="bold" color="white" mb={2}>Professional Experience</Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                        <TextField fullWidth label="Job Role" variant="outlined" value={userInput.experience.jobRole} onChange={(e) => setUserInput({ ...userInput, experience: { ...userInput.experience, jobRole: e.target.value } })} />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                        <TextField fullWidth label="Company Name" variant="outlined" value={userInput.experience.company} onChange={(e) => setUserInput({ ...userInput, experience: { ...userInput.experience, company: e.target.value } })} />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                        <TextField fullWidth label="Location" variant="outlined" value={userInput.experience.jobLocation} onChange={(e) => setUserInput({ ...userInput, experience: { ...userInput.experience, jobLocation: e.target.value } })} />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                        <TextField fullWidth label="Duration (e.g. Jan 2021 - Present)" variant="outlined" value={userInput.experience.duration} onChange={(e) => setUserInput({ ...userInput, experience: { ...userInput.experience, duration: e.target.value } })} />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField fullWidth multiline rows={6} label="Description & Achievements (use bullet points)" variant="outlined" value={userInput.experience.description || ""} onChange={(e) => setUserInput({ ...userInput, experience: { ...userInput.experience, description: e.target.value } })} />
+                    </Grid>
+                </Grid>
+            );
+            case 4: return (
+                <Grid container spacing={3} className="animate-fade-in-up">
+                    <Grid item xs={12}>
+                        <Typography variant="h5" fontWeight="bold" color="white" mb={2}>Skills & Expertise</Typography>
+                    </Grid>
+                    <Grid item xs={12} display="flex" gap={2}>
+                        <TextField fullWidth label="Enter Skill (e.g. React.js)" variant="outlined" value={inputSkill} onChange={(e) => setInputSkill(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && addSkill(inputSkill)} />
+                        <Button variant="contained" color="primary" onClick={() => addSkill(inputSkill)} sx={{ px: 4 }}>Add</Button>
+                    </Grid>
+                    <Grid item xs={12}>
+                        <Typography variant="body2" color="text.secondary" gutterBottom>Popular Suggestions:</Typography>
+                        <Box display="flex" flexWrap="wrap" gap={1}>
+                            {skillsSuggestionArray.map(skill => (
+                                <Chip 
+                                    key={skill} 
+                                    label={skill} 
+                                    onClick={() => addSkill(skill)} 
+                                    variant="outlined" 
+                                    clickable
+                                    sx={{ borderColor: 'rgba(255,255,255,0.2)', color: 'text.secondary', '&:hover': { borderColor: '#00f2fe', color: '#00f2fe' } }}
+                                />
+                            ))}
+                        </Box>
+                    </Grid>
+                    {userInput.skill.length > 0 && (
+                        <Grid item xs={12} mt={2}>
+                            <Typography variant="body2" color="text.secondary" gutterBottom>Your Skills:</Typography>
+                            <Box display="flex" flexWrap="wrap" gap={1}>
+                                {userInput.skill.map(skill => (
+                                    <Chip 
+                                        key={skill} 
+                                        label={skill} 
+                                        onDelete={() => removeSkill(skill)} 
+                                        sx={{ 
+                                            background: 'linear-gradient(135deg, rgba(0,242,254,0.1), rgba(79,172,254,0.1))', 
+                                            color: '#00f2fe', 
+                                            border: '1px solid rgba(0,242,254,0.3)',
+                                            '& .MuiChip-deleteIcon': { color: '#00f2fe' }
+                                        }} 
+                                    />
+                                ))}
+                            </Box>
+                        </Grid>
+                    )}
+                </Grid>
+            );
+            case 5: return (
+                <Grid container spacing={3} className="animate-fade-in-up">
+                    <Grid item xs={12}>
+                        <Typography variant="h5" fontWeight="bold" color="white" mb={2}>Professional Summary</Typography>
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField 
+                            fullWidth 
+                            multiline 
+                            rows={8} 
+                            label="Write a short, engaging summary about your career goals and achievements." 
+                            variant="outlined" 
+                            value={userInput.summary || userInput.professionalData.summary || ""} 
+                            onChange={(e) => setUserInput({ ...userInput, summary: e.target.value, professionalData: { ...userInput.professionalData, summary: e.target.value } })} 
+                        />
+                    </Grid>
+                </Grid>
+            );
+            default: return 'Unknown step';
+        }
+    };
 
     return (
-        <>
-            <Box sx={{ width: '100%' }}>
-                <Stepper activeStep={activeStep}>
-                    {steps.map((label, index) => {
-                        const stepProps = {};
-                        const labelProps = {};
-                        if (isStepOptional(index)) {
-                            labelProps.optional = (
-                                <Typography variant="caption">Optional</Typography>
-                            );
+        <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', height: '100%' }}>
+            
+            {/* Progress Section */}
+            <Box sx={{ mb: 4 }}>
+                <Box display="flex" justifyContent="space-between" mb={1}>
+                    <Typography variant="body2" color="text.secondary" fontWeight="bold">
+                        Form Completeness
+                    </Typography>
+                    <Typography variant="body2" color={calculateCompleteness() === 100 ? '#10b981' : '#00f2fe'} fontWeight="bold">
+                        {calculateCompleteness()}%
+                    </Typography>
+                </Box>
+                <LinearProgress 
+                    variant="determinate" 
+                    value={calculateCompleteness()} 
+                    sx={{ 
+                        height: 6, 
+                        borderRadius: 3,
+                        backgroundColor: 'rgba(255,255,255,0.05)',
+                        '& .MuiLinearProgress-bar': {
+                            background: calculateCompleteness() === 100 
+                                ? 'linear-gradient(90deg, #10b981, #34d399)' 
+                                : 'linear-gradient(90deg, #00f2fe, #4facfe)'
                         }
-                        if (isStepSkipped(index)) {
-                            stepProps.completed = false;
-                        }
-                        return (
-                            <Step key={label} {...stepProps}>
-                                <StepLabel {...labelProps}>{label}</StepLabel>
-                            </Step>
-                        );
-                    })}
-                </Stepper>
+                    }} 
+                />
+            </Box>
+            
+            <Stepper activeStep={activeStep} alternativeLabel connector={<CustomConnector />} sx={{ mb: 6 }}>
+                {steps.map((label) => (
+                    <Step key={label}>
+                        <StepLabel 
+                            StepIconProps={{
+                                sx: {
+                                    color: 'rgba(255,255,255,0.1)',
+                                    '&.Mui-active': { color: '#00f2fe' },
+                                    '&.Mui-completed': { color: '#00f2fe' },
+                                    '& .MuiStepIcon-text': { fill: '#000', fontWeight: 'bold' }
+                                }
+                            }}
+                        >
+                            <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>{label}</Typography>
+                        </StepLabel>
+                    </Step>
+                ))}
+            </Stepper>
+
+            {/* Form Content */}
+            <Box sx={{ flexGrow: 1 }}>
                 {activeStep === steps.length ? (
-                    <React.Fragment>
-                        <Typography sx={{ mt: 2, mb: 1 }}>
-                            All steps completed - you&apos;re finished
-                        </Typography>
-                        <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2 }}>
-                            <Box sx={{ flex: '1 1 auto' }} />
-                            <Button onClick={handleReset}>Reset</Button>
-                            <Button variant='contained' className='ms-5' onClick={handleAddResume}>Add Resume</Button>
+                    <Box textAlign="center" py={8} className="animate-fade-in-up">
+                        <Box sx={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 3 }}>
+                            <Typography variant="h3">🎉</Typography>
                         </Box>
-                    </React.Fragment>
+                        <Typography variant="h4" gutterBottom fontWeight="800" color="white">
+                            All Steps Completed!
+                        </Typography>
+                        <Typography variant="body1" color="text.secondary" mb={5}>
+                            Review your details in the live preview before generating your resume.
+                        </Typography>
+                        <Box display="flex" justifyContent="center" gap={3}>
+                            <Button variant="outlined" onClick={handleReset} sx={{ px: 4 }}>Edit Details</Button>
+                            <Button variant="contained" color="primary" onClick={handleAddResume} size="large" sx={{ px: 4 }}>
+                                Generate Resume
+                            </Button>
+                        </Box>
+                    </Box>
                 ) : (
-                    <React.Fragment>
-                        <Typography sx={{ mt: 2, mb: 1 }}>Step {activeStep + 1}</Typography>
-                        {renderStepArrayContent(activeStep)}
-                        <Box sx={{ display: 'flex', flexDirection: 'row', pt: 2 }}>
-                            <Button
-                                color="inherit"
-                                disabled={activeStep === 0}
-                                onClick={handleBack}
-                                sx={{ mr: 1 }}
+                    <>
+                        <Box sx={{ minHeight: '350px' }}>
+                            {renderStepContent(activeStep)}
+                        </Box>
+                        
+                        <Box sx={{ display: 'flex', flexDirection: 'row', pt: 6, mt: 'auto' }}>
+                            <Button 
+                                color="inherit" 
+                                disabled={activeStep === 0} 
+                                onClick={handleBack} 
+                                sx={{ 
+                                    mr: 1, 
+                                    color: 'text.secondary', 
+                                    borderColor: 'rgba(255,255,255,0.2)',
+                                    display: activeStep === 0 ? 'none' : 'block'
+                                }}
+                                variant="outlined"
                             >
                                 Back
                             </Button>
                             <Box sx={{ flex: '1 1 auto' }} />
-                            {isStepOptional(activeStep) && (
-                                <Button color="inherit" onClick={handleSkip} sx={{ mr: 1 }}>
-                                    Skip
-                                </Button>
-                            )}
-                            <Button onClick={handleNext}>
-                                {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
+                            <Button 
+                                onClick={handleNext} 
+                                variant="contained"
+                                sx={{ px: 5 }}
+                            >
+                                {activeStep === steps.length - 1 ? 'Review' : 'Next Step'}
                             </Button>
                         </Box>
-                    </React.Fragment>
+                    </>
                 )}
             </Box>
-        </>
-    )
+        </Box>
+    );
 }
 
-export default Steps
+export default Steps;

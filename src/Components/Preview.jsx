@@ -1,81 +1,192 @@
-import React from 'react'
-import Stack from '@mui/material/Stack';
-import { FaFileDownload } from "react-icons/fa";
-import { FaHistory } from "react-icons/fa";
-import Box from '@mui/material/Box';
-import Paper from '@mui/material/Paper';
-import Link from '@mui/material/Link';
-import Divider from '@mui/material/Divider';
-import Button from '@mui/material/Button';
+import React from 'react';
+import { Stack, Box, Paper, Divider, Button, Switch, FormControlLabel, Typography, Chip, Grid } from '@mui/material';
+import { MdFileDownload, MdHistory, MdArrowBack } from 'react-icons/md';
+import { Link } from 'react-router-dom';
 import Edit from './Edit';
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
-
+import AtsSafeTemplate from './AtsSafeTemplate';
 
 function Preview({ userInput, isResumeAdded, resumeId, setUserInput }) {
+  const [isAtsTemplate, setIsAtsTemplate] = React.useState(false);
 
   const downloadPDF = async () => {
-    const input = document.getElementById("result") // to get the id
-    const canvas = await html2canvas(input, { scale: 2 })// convert the selected html to canvas (screenshot)
-    const imgData = canvas.toDataURL("image/png")
+    const input = document.getElementById("result");
+    
+    if (isAtsTemplate) {
+      const doc = new jsPDF('p', 'pt', 'a4');
+      doc.html(input, {
+        callback: function (doc) {
+          doc.save("ats-safe-resume.pdf");
+        },
+        x: 20,
+        y: 20,
+        width: 550, 
+        windowWidth: 800 
+      });
+    } else {
+      const canvas = await html2canvas(input, { scale: 2 });
+      const imgData = canvas.toDataURL("image/png");
 
-    //pdf
-    const pdf = new jsPDF("p", "mm", "a4")
-    const pdfWidth = pdf.internal.pageSize.getWidth()
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width
-    pdf.addImage(imgData, "png", 0, 0, pdfWidth, pdfHeight)
-    pdf.save("resume.pdf")
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      pdf.addImage(imgData, "png", 0, 0, pdfWidth, pdfHeight);
+      pdf.save("resume.pdf");
+    }
   }
 
-  // console.log(userInput)
   return (
     <>
-      <Stack direction={"row"} sx={{ display: "flex", justifyContent: "end", padding: "50px", gap: "10px" }}>
-        {
-          isResumeAdded && <>
+      <Stack direction="row" spacing={2} sx={{ justifyContent: "flex-end", mb: 3 }}>
+        {isResumeAdded && (
+          <>
             <Edit resumeId={resumeId} setUserInput={setUserInput} />
-            {/* <button className='btn btn-primary'><FaRegEdit /></button> */}
-            <p><button type='button' onClick={downloadPDF} className='btn btn-primary align-items-center d-flex justify-content-center btn-lg'><FaFileDownload /></button></p>
-          </>}
-        <p><Link href={"/history"}><button className='btn btn-primary align-items-center d-flex justify-content-center btn-lg'><FaHistory /></button></Link></p>
-        <Link href={"/"}><p className='btn text-primary border'>Back</p></Link>
+            <Button 
+              variant="contained" 
+              color="secondary" 
+              startIcon={<MdFileDownload />}
+              onClick={downloadPDF}
+              sx={{ px: 3, borderRadius: '12px' }}
+            >
+              Download PDF
+            </Button>
+          </>
+        )}
+        <Button 
+          component={Link} 
+          to="/history" 
+          variant="outlined" 
+          startIcon={<MdHistory />}
+          sx={{ borderColor: 'rgba(255,255,255,0.2)', color: 'text.secondary', '&:hover': { borderColor: '#00f2fe', color: '#00f2fe' } }}
+        >
+          History
+        </Button>
       </Stack>
+
+      <Box display="flex" justifyContent="center" mb={3}>
+        <FormControlLabel
+          control={<Switch checked={isAtsTemplate} onChange={(e) => setIsAtsTemplate(e.target.checked)} color="primary" />}
+          label={<Typography fontWeight="600" color="text.secondary">Use ATS-Safe Plain Template</Typography>}
+        />
+      </Box>
+
       <div id='result'>
-        <Box sx={{ textAlign: "center" }} >
-          <Paper elevation={3} sx={{ p: 3 }}>
-            <h2>{userInput.professionalData.name}</h2>
-            <h6>{userInput.professionalData.JobTitle}</h6>
-            <p><span>{userInput.professionalData.location}</span> | <span>{userInput.professionalData.email}</span>
-              | <span>{userInput.professionalData.phone}</span>
-            </p>
+        {isAtsTemplate ? (
+          <AtsSafeTemplate userInput={userInput} />
+        ) : (
+          <Paper elevation={3} sx={{ p: { xs: 4, md: 6 }, borderRadius: '8px', border: '1px solid #e2e8f0', bgcolor: '#ffffff', textAlign: 'left', color: '#0f172a', fontFamily: '"Inter", sans-serif' }}>
+            
+            {/* Header / Contact Info */}
+            <Box sx={{ borderBottom: '2px solid #0f172a', pb: 3, mb: 3, textAlign: 'center' }}>
+              <Typography variant="h3" fontWeight="800" color="#0f172a" gutterBottom sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>
+                {userInput.professionalData.name || "Your Name"}
+              </Typography>
+              <Typography variant="h6" color="#334155" gutterBottom sx={{ fontWeight: 600 }}>
+                {userInput.professionalData.JobTitle || "Professional Title"}
+              </Typography>
+              <Typography variant="body2" color="#475569" sx={{ display: 'flex', justifyContent: 'center', gap: 1, flexWrap: 'wrap' }}>
+                {userInput.professionalData.location && <span>{userInput.professionalData.location} •</span>}
+                {userInput.professionalData.email && <span>{userInput.professionalData.email} •</span>}
+                {userInput.professionalData.phone && <span>{userInput.professionalData.phone}</span>}
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', mt: 1 }}>
+                {userInput.professionalData.linkedIn && <Typography variant="body2" component="a" href={userInput.professionalData.linkedIn} color="#2563eb" sx={{ textDecoration: 'none', fontWeight: 500 }}>LinkedIn</Typography>}
+                {userInput.professionalData.github && <Typography variant="body2" component="a" href={userInput.professionalData.github} color="#2563eb" sx={{ textDecoration: 'none', fontWeight: 500 }}>GitHub</Typography>}
+                {userInput.professionalData.portfolio && <Typography variant="body2" component="a" href={userInput.professionalData.portfolio} color="#2563eb" sx={{ textDecoration: 'none', fontWeight: 500 }}>Portfolio</Typography>}
+              </Box>
+            </Box>
 
-            <div className='d-flex gap-3 justify-content-center'>
-              <Link href={userInput.professionalData.github}>GITHUB</Link> |
-              <Link href={userInput.professionalData.linkedIn}>LINKEDIN</Link> |
-              <Link href={userInput.professionalData.portfolio}>PORTFOLIO</Link>
-            </div>
+            {/* Summary */}
+            {(userInput.professionalData.summary || userInput.summary) && (
+              <Box mb={4}>
+                <Typography variant="h6" color="#0f172a" fontWeight="bold" gutterBottom sx={{ textTransform: 'uppercase' }}>
+                  Summary
+                </Typography>
+                <Typography variant="body1" color="#334155" sx={{ textAlign: "justify", lineHeight: 1.7 }}>
+                  {userInput.professionalData.summary || userInput.summary}
+                </Typography>
+              </Box>
+            )}
 
-            <Divider sx={{ marginTop: "20px" }}>Summary</Divider>
-            <p style={{ textAlign: "justify" }}>{userInput.professionalData.summary}</p>
-            <Divider sx={{ marginTop: "20px" }}>Education</Divider>
-            <h4>{userInput.educatinalData.course}</h4>
-            <p>{userInput.educatinalData.college} | {userInput.educatinalData.university} | {userInput.educatinalData.year}</p>
-            <Divider sx={{ marginTop: "20px" }}>Professional Experience</Divider>
-            <h4>{userInput.experience.jobRole}</h4>
-            <p>{userInput.experience.company} | {userInput.experience.jobLocation} | {userInput.experience.duration}</p>
-            <Divider sx={{ marginTop: "20px" }}>Skills</Divider>
-            <div className='d-flex flex-wrap gap-3'>
-              {
-                userInput.skill.map((item) => (
-                  <Button key={item} variant='outlined'>{item}</Button>
-                ))
-              }
-            </div>
+            {/* Professional Experience */}
+            {(userInput.experience.jobRole || userInput.experience.company) && (
+              <Box mb={4}>
+                <Typography variant="h6" color="#0f172a" fontWeight="bold" gutterBottom sx={{ textTransform: 'uppercase' }}>
+                  Professional Experience
+                </Typography>
+                <Box sx={{ mb: 2 }}>
+                  <Grid container justifyContent="space-between" alignItems="baseline">
+                    <Grid item>
+                      <Typography variant="subtitle1" fontWeight="bold" color="#0f172a">
+                        {userInput.experience.jobRole}
+                      </Typography>
+                    </Grid>
+                    <Grid item>
+                      <Typography variant="body2" color="#0f172a" fontWeight="bold">
+                        {userInput.experience.duration}
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                  <Typography variant="body2" color="#475569" fontStyle="italic" gutterBottom>
+                    {userInput.experience.company} {userInput.experience.jobLocation ? `| ${userInput.experience.jobLocation}` : ""}
+                  </Typography>
+                  {userInput.experience.description && (
+                    <Box component="ul" sx={{ mt: 1, pl: 3, m: 0, color: '#334155' }}>
+                      {userInput.experience.description.split('\n').map((point, idx) => {
+                        const cleanPoint = point.replace(/^[-\*\u2022]\s*/, '').trim();
+                        if (!cleanPoint) return null;
+                        return <Typography component="li" variant="body2" key={idx} sx={{ mb: 0.5, lineHeight: 1.6 }}>{cleanPoint}</Typography>;
+                      })}
+                    </Box>
+                  )}
+                </Box>
+              </Box>
+            )}
+
+            {/* Education */}
+            {(userInput.educatinalData.course || userInput.educatinalData.college) && (
+              <Box mb={4}>
+                <Typography variant="h6" color="#0f172a" fontWeight="bold" gutterBottom sx={{ textTransform: 'uppercase' }}>
+                  Education
+                </Typography>
+                <Grid container justifyContent="space-between" alignItems="baseline">
+                  <Grid item>
+                    <Typography variant="subtitle1" fontWeight="bold" color="#0f172a">
+                      {userInput.educatinalData.course}
+                    </Typography>
+                  </Grid>
+                  <Grid item>
+                    <Typography variant="body2" color="#0f172a" fontWeight="bold">
+                      {userInput.educatinalData.year}
+                    </Typography>
+                  </Grid>
+                </Grid>
+                <Typography variant="body2" color="#475569" fontStyle="italic">
+                  {userInput.educatinalData.college} {userInput.educatinalData.university ? `| ${userInput.educatinalData.university}` : ""}
+                </Typography>
+              </Box>
+            )}
+
+            {/* Skills */}
+            {userInput.skill && userInput.skill.length > 0 && (
+              <Box mb={2}>
+                <Typography variant="h6" color="#0f172a" fontWeight="bold" gutterBottom sx={{ textTransform: 'uppercase' }}>
+                  Skills
+                </Typography>
+                <Box display="flex" flexWrap="wrap" gap={1}>
+                  {userInput.skill.map((item) => (
+                    <Chip key={item} label={item} sx={{ bgcolor: '#e2e8f0', color: '#0f172a', fontWeight: 600, borderRadius: 1 }} />
+                  ))}
+                </Box>
+              </Box>
+            )}
+
           </Paper>
-        </Box>
+        )}
       </div>
     </>
-  )
+  );
 }
 
-export default Preview
+export default Preview;
