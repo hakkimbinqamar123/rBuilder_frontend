@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { MdEdit } from "react-icons/md";
+import { MdEdit, MdAdd, MdDelete } from "react-icons/md";
 import { Box, Button, Typography, Modal, TextField, Grid, Chip, IconButton, Divider } from '@mui/material';
 import { getResumeAPI, updateResumeAPI } from '../service/allAPI';
 import Swal from 'sweetalert2';
@@ -25,17 +25,20 @@ function Edit({ resumeId, setUserInput, customButton }) {
         professionalData: {
             name: "", JobTitle: "", location: "", email: "", phone: "", github: "", linkedIn: "", portfolio: ""
         },
-        educatinalData: {
+        educatinalData: [{
             course: "", college: "", university: "", year: ""
-        },
-        experience: {
+        }],
+        experience: [{
             jobRole: "", company: "", jobLocation: "", duration: "", description: ""
-        },
+        }],
+        certifications: [],
+        customSections: [],
         skill: [],
         summary: ""
     });
 
     const [inputSkill, setInputSkill] = useState("");
+    const [inputCertification, setInputCertification] = useState("");
     const [open, setOpen] = useState(false);
 
     const skillsSuggestionArray = ["HTML", "CSS", "JavaScript", "React", "Node.js", "MongoDB", "Python", "SQL", "Git", "UI/UX"];
@@ -49,7 +52,14 @@ function Edit({ resumeId, setUserInput, customButton }) {
     const getAResume = async () => {
         try {
             const result = await getResumeAPI(resumeId);
-            setEditUserInput(result.data);
+            setEditUserInput({
+                ...result.data,
+                // Ensure array fields exist even if old records don't have them
+                educatinalData: Array.isArray(result.data.educatinalData) ? result.data.educatinalData : (result.data.educatinalData ? [result.data.educatinalData] : [{ course: "", college: "", university: "", year: "" }]),
+                experience: Array.isArray(result.data.experience) ? result.data.experience : (result.data.experience ? [result.data.experience] : [{ jobRole: "", company: "", jobLocation: "", duration: "", description: "" }]),
+                certifications: result.data.certifications || [],
+                customSections: result.data.customSections || []
+            });
         } catch (error) {
             console.error("Error fetching resume", error);
         }
@@ -81,6 +91,64 @@ function Edit({ resumeId, setUserInput, customButton }) {
 
     const removeSkill = (skillToRemove) => {
         setEditUserInput({ ...editUserInput, skill: editUserInput.skill.filter(item => item !== skillToRemove) });
+    };
+
+    const addCertification = (certToAdd) => {
+        if (certToAdd && certToAdd.trim() !== "") {
+            if (editUserInput.certifications.includes(certToAdd.trim())) {
+                Swal.fire({ icon: 'warning', title: 'Oops', text: 'Certification already exists!' });
+            } else {
+                setEditUserInput({ ...editUserInput, certifications: [...editUserInput.certifications, certToAdd.trim()] });
+                setInputCertification("");
+            }
+        }
+    };
+
+    const removeCertification = (certToRemove) => {
+        setEditUserInput({ ...editUserInput, certifications: editUserInput.certifications.filter(item => item !== certToRemove) });
+    };
+
+    // Array Handlers
+    const handleEducationChange = (index, field, value) => {
+        const updated = [...editUserInput.educatinalData];
+        updated[index] = { ...updated[index], [field]: value };
+        setEditUserInput({ ...editUserInput, educatinalData: updated });
+    };
+    const addEducation = () => {
+        setEditUserInput({ ...editUserInput, educatinalData: [...editUserInput.educatinalData, { course: "", college: "", university: "", year: "" }] });
+    };
+    const removeEducation = (index) => {
+        const updated = [...editUserInput.educatinalData];
+        updated.splice(index, 1);
+        setEditUserInput({ ...editUserInput, educatinalData: updated });
+    };
+
+    const handleExperienceChange = (index, field, value) => {
+        const updated = [...editUserInput.experience];
+        updated[index] = { ...updated[index], [field]: value };
+        setEditUserInput({ ...editUserInput, experience: updated });
+    };
+    const addExperience = () => {
+        setEditUserInput({ ...editUserInput, experience: [...editUserInput.experience, { jobRole: "", company: "", jobLocation: "", duration: "", description: "" }] });
+    };
+    const removeExperience = (index) => {
+        const updated = [...editUserInput.experience];
+        updated.splice(index, 1);
+        setEditUserInput({ ...editUserInput, experience: updated });
+    };
+
+    const handleCustomSectionChange = (index, field, value) => {
+        const updated = [...editUserInput.customSections];
+        updated[index] = { ...updated[index], [field]: value };
+        setEditUserInput({ ...editUserInput, customSections: updated });
+    };
+    const addCustomSection = () => {
+        setEditUserInput({ ...editUserInput, customSections: [...editUserInput.customSections, { title: "", description: "" }] });
+    };
+    const removeCustomSection = (index) => {
+        const updated = [...editUserInput.customSections];
+        updated.splice(index, 1);
+        setEditUserInput({ ...editUserInput, customSections: updated });
     };
 
     useEffect(() => {
@@ -156,45 +224,114 @@ function Edit({ resumeId, setUserInput, customButton }) {
 
                         {/* Education Details */}
                         <Grid item xs={12}>
-                            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>Education Details</Typography>
+                            <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+                                <Typography variant="subtitle1" fontWeight="bold">Education Details</Typography>
+                                <Button size="small" startIcon={<MdAdd />} onClick={addEducation}>Add Education</Button>
+                            </Box>
                             <Divider sx={{ mb: 2 }} />
-                            <Grid container spacing={2}>
-                                <Grid item xs={12} sm={6}>
-                                    <TextField fullWidth label="Course / Degree" variant="outlined" value={editUserInput.educatinalData.course || ""} onChange={(e) => setEditUserInput({ ...editUserInput, educatinalData: { ...editUserInput.educatinalData, course: e.target.value } })} />
-                                </Grid>
-                                <Grid item xs={12} sm={6}>
-                                    <TextField fullWidth label="College" variant="outlined" value={editUserInput.educatinalData.college || ""} onChange={(e) => setEditUserInput({ ...editUserInput, educatinalData: { ...editUserInput.educatinalData, college: e.target.value } })} />
-                                </Grid>
-                                <Grid item xs={12} sm={6}>
-                                    <TextField fullWidth label="University" variant="outlined" value={editUserInput.educatinalData.university || ""} onChange={(e) => setEditUserInput({ ...editUserInput, educatinalData: { ...editUserInput.educatinalData, university: e.target.value } })} />
-                                </Grid>
-                                <Grid item xs={12} sm={6}>
-                                    <TextField fullWidth label="Year of Passout" variant="outlined" value={editUserInput.educatinalData.year || ""} onChange={(e) => setEditUserInput({ ...editUserInput, educatinalData: { ...editUserInput.educatinalData, year: e.target.value } })} />
-                                </Grid>
-                            </Grid>
+                            {editUserInput.educatinalData.map((edu, index) => (
+                                <Box key={index} mb={3} p={2} border={1} borderColor="grey.300" borderRadius={2} position="relative">
+                                    {editUserInput.educatinalData.length > 1 && (
+                                        <IconButton size="small" color="error" onClick={() => removeEducation(index)} sx={{ position: 'absolute', top: 5, right: 5 }}>
+                                            <MdDelete />
+                                        </IconButton>
+                                    )}
+                                    <Grid container spacing={2} mt={1}>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField fullWidth label="Course / Degree" variant="outlined" value={edu.course || ""} onChange={(e) => handleEducationChange(index, 'course', e.target.value)} />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField fullWidth label="College" variant="outlined" value={edu.college || ""} onChange={(e) => handleEducationChange(index, 'college', e.target.value)} />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField fullWidth label="University" variant="outlined" value={edu.university || ""} onChange={(e) => handleEducationChange(index, 'university', e.target.value)} />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField fullWidth label="Year of Passout" variant="outlined" value={edu.year || ""} onChange={(e) => handleEducationChange(index, 'year', e.target.value)} />
+                                        </Grid>
+                                    </Grid>
+                                </Box>
+                            ))}
                         </Grid>
 
                         {/* Professional Details */}
                         <Grid item xs={12}>
-                            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>Professional Experience</Typography>
+                            <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+                                <Typography variant="subtitle1" fontWeight="bold">Professional Experience</Typography>
+                                <Button size="small" startIcon={<MdAdd />} onClick={addExperience}>Add Experience</Button>
+                            </Box>
                             <Divider sx={{ mb: 2 }} />
-                            <Grid container spacing={2}>
-                                <Grid item xs={12} sm={6}>
-                                    <TextField fullWidth label="Job Role" variant="outlined" value={editUserInput.experience.jobRole || ""} onChange={(e) => setEditUserInput({ ...editUserInput, experience: { ...editUserInput.experience, jobRole: e.target.value } })} />
+                            {editUserInput.experience.map((exp, index) => (
+                                <Box key={index} mb={3} p={2} border={1} borderColor="grey.300" borderRadius={2} position="relative">
+                                    {editUserInput.experience.length > 1 && (
+                                        <IconButton size="small" color="error" onClick={() => removeExperience(index)} sx={{ position: 'absolute', top: 5, right: 5 }}>
+                                            <MdDelete />
+                                        </IconButton>
+                                    )}
+                                    <Grid container spacing={2} mt={1}>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField fullWidth label="Job Role" variant="outlined" value={exp.jobRole || ""} onChange={(e) => handleExperienceChange(index, 'jobRole', e.target.value)} />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField fullWidth label="Company Name" variant="outlined" value={exp.company || ""} onChange={(e) => handleExperienceChange(index, 'company', e.target.value)} />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField fullWidth label="Location" variant="outlined" value={exp.jobLocation || ""} onChange={(e) => handleExperienceChange(index, 'jobLocation', e.target.value)} />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}>
+                                            <TextField fullWidth label="Duration" variant="outlined" value={exp.duration || ""} onChange={(e) => handleExperienceChange(index, 'duration', e.target.value)} />
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <TextField fullWidth multiline rows={4} label="Description & Achievements" variant="outlined" value={exp.description || ""} onChange={(e) => handleExperienceChange(index, 'description', e.target.value)} />
+                                        </Grid>
+                                    </Grid>
+                                </Box>
+                            ))}
+                        </Grid>
+
+                        {/* Certifications */}
+                        <Grid item xs={12}>
+                            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>Certifications</Typography>
+                            <Divider sx={{ mb: 2 }} />
+                            <Grid container spacing={2} alignItems="center">
+                                <Grid item xs={12} sm={8}>
+                                    <TextField fullWidth label="Add Certification" variant="outlined" value={inputCertification} onChange={(e) => setInputCertification(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && addCertification(inputCertification)} />
                                 </Grid>
-                                <Grid item xs={12} sm={6}>
-                                    <TextField fullWidth label="Company Name" variant="outlined" value={editUserInput.experience.company || ""} onChange={(e) => setEditUserInput({ ...editUserInput, experience: { ...editUserInput.experience, company: e.target.value } })} />
-                                </Grid>
-                                <Grid item xs={12} sm={6}>
-                                    <TextField fullWidth label="Location" variant="outlined" value={editUserInput.experience.jobLocation || ""} onChange={(e) => setEditUserInput({ ...editUserInput, experience: { ...editUserInput.experience, jobLocation: e.target.value } })} />
-                                </Grid>
-                                <Grid item xs={12} sm={6}>
-                                    <TextField fullWidth label="Duration" variant="outlined" value={editUserInput.experience.duration || ""} onChange={(e) => setEditUserInput({ ...editUserInput, experience: { ...editUserInput.experience, duration: e.target.value } })} />
+                                <Grid item xs={12} sm={4}>
+                                    <Button fullWidth variant="contained" onClick={() => addCertification(inputCertification)} sx={{ height: '56px' }}>Add</Button>
                                 </Grid>
                                 <Grid item xs={12}>
-                                    <TextField fullWidth multiline rows={4} label="Description & Achievements" variant="outlined" value={editUserInput.experience.description || ""} onChange={(e) => setEditUserInput({ ...editUserInput, experience: { ...editUserInput.experience, description: e.target.value } })} />
+                                    <Box display="flex" flexWrap="wrap" gap={1}>
+                                        {editUserInput.certifications.map((item) => (
+                                            <Chip key={item} label={item} onDelete={() => removeCertification(item)} color="primary" />
+                                        ))}
+                                    </Box>
                                 </Grid>
                             </Grid>
+                        </Grid>
+
+                        {/* Custom Sections */}
+                        <Grid item xs={12}>
+                            <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+                                <Typography variant="subtitle1" fontWeight="bold">Custom Sections</Typography>
+                                <Button size="small" startIcon={<MdAdd />} onClick={addCustomSection}>Add Section</Button>
+                            </Box>
+                            <Divider sx={{ mb: 2 }} />
+                            {editUserInput.customSections.map((section, index) => (
+                                <Box key={index} mb={3} p={2} border={1} borderColor="grey.300" borderRadius={2} position="relative">
+                                    <IconButton size="small" color="error" onClick={() => removeCustomSection(index)} sx={{ position: 'absolute', top: 5, right: 5 }}>
+                                        <MdDelete />
+                                    </IconButton>
+                                    <Grid container spacing={2} mt={1}>
+                                        <Grid item xs={12}>
+                                            <TextField fullWidth label="Section Title" variant="outlined" value={section.title || ""} onChange={(e) => handleCustomSectionChange(index, 'title', e.target.value)} />
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <TextField fullWidth multiline rows={4} label="Section Description" variant="outlined" value={section.description || ""} onChange={(e) => handleCustomSectionChange(index, 'description', e.target.value)} />
+                                        </Grid>
+                                    </Grid>
+                                </Box>
+                            ))}
                         </Grid>
 
                         {/* Skills */}

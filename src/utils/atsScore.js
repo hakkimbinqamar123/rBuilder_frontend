@@ -40,10 +40,15 @@ export const calculateAtsScore = (userInput, jobDescription = "") => {
   }
 
   // c. Work Experience (20 pts)
-  const fullExpText = `${experience?.jobRole || ""} ${experience?.company || ""} ${experience?.description || ""}`;
   let expScore = 0;
-  if (experience?.jobRole?.trim() && experience?.company?.trim()) {
+  let fullExpText = "";
+  
+  if (experience && experience.length > 0 && (experience[0].jobRole?.trim() || experience[0].company?.trim())) {
     expScore += 10;
+    
+    // Combine all experience text for keyword analysis
+    fullExpText = experience.map(exp => `${exp.jobRole || ""} ${exp.company || ""} ${exp.description || ""}`).join(" ");
+    
     const hasNumbers = /\d/.test(fullExpText);
     if (hasNumbers) {
         expScore += 5;
@@ -73,7 +78,7 @@ export const calculateAtsScore = (userInput, jobDescription = "") => {
   }
 
   // e. Education (10 pts)
-  if (educatinalData?.course?.trim() && educatinalData?.college?.trim()) {
+  if (educatinalData && educatinalData.length > 0 && educatinalData[0].course?.trim() && educatinalData[0].college?.trim()) {
     score += 10;
   } else {
     checklist.push({ type: "warning", text: "Complete your education details." });

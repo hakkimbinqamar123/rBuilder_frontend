@@ -1,11 +1,16 @@
 import axios from "axios"
 
-const commonAPI = async(httpMethod, url, reqBody) => {
+export const commonAPI = async(httpMethod, url, reqBody) => {
+    const token = localStorage.getItem('token');
     
     const reqConfig = {
         method: httpMethod,
         url,
-        data: reqBody
+        data: reqBody,
+        headers: {
+            "Content-Type": "application/json",
+            ...(token && { "Authorization": `Bearer ${token}` })
+        }
     }
     return await axios(reqConfig).then(res=>{
         return res

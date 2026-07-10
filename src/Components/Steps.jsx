@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Box, Stepper, Step, StepLabel, StepConnector, stepConnectorClasses, Button, Typography, TextField, LinearProgress, Grid, Chip } from '@mui/material';
+import { Box, Stepper, Step, StepLabel, StepConnector, stepConnectorClasses, Button, Typography, TextField, LinearProgress, Grid, Chip, IconButton } from '@mui/material';
+import { MdDelete, MdAdd } from "react-icons/md";
 import { addResumeAPI } from '../service/allAPI';
 import Swal from 'sweetalert2';
 import { styled } from '@mui/material/styles';
 
-const steps = ['Basic', 'Contact', 'Education', 'Experience', 'Skills', 'Summary'];
+const steps = ['Basic', 'Contact', 'Education', 'Experience', 'Certifications', 'Custom', 'Skills', 'Summary'];
 
 // Customizing the Stepper Connector for a premium look
 const CustomConnector = styled(StepConnector)(({ theme }) => ({
@@ -34,6 +35,7 @@ const CustomConnector = styled(StepConnector)(({ theme }) => ({
 function Steps({ setUserInput, userInput, setIsResumeAdded, setResumeId }) {
     const [activeStep, setActiveStep] = useState(0);
     const [inputSkill, setInputSkill] = useState("");
+    const [inputCertification, setInputCertification] = useState("");
 
     const addSkill = (newSkill) => {
         if (newSkill && newSkill.trim() !== "") {
@@ -48,6 +50,64 @@ function Steps({ setUserInput, userInput, setIsResumeAdded, setResumeId }) {
 
     const removeSkill = (skillToRemove) => {
         setUserInput({ ...userInput, skill: userInput.skill.filter(item => item !== skillToRemove) });
+    };
+
+    const addCertification = (newCert) => {
+        if (newCert && newCert.trim() !== "") {
+            if (userInput.certifications.includes(newCert.trim())) {
+                Swal.fire({ icon: 'warning', title: 'Oops', text: 'Certification already exists!', background: '#0f172a', color: '#fff' });
+            } else {
+                setUserInput({ ...userInput, certifications: [...userInput.certifications, newCert.trim()] });
+                setInputCertification("");
+            }
+        }
+    };
+
+    const removeCertification = (certToRemove) => {
+        setUserInput({ ...userInput, certifications: userInput.certifications.filter(item => item !== certToRemove) });
+    };
+
+    // Array Handlers
+    const handleEducationChange = (index, field, value) => {
+        const updated = [...userInput.educatinalData];
+        updated[index] = { ...updated[index], [field]: value };
+        setUserInput({ ...userInput, educatinalData: updated });
+    };
+    const addEducation = () => {
+        setUserInput({ ...userInput, educatinalData: [...userInput.educatinalData, { course: "", college: "", university: "", year: "" }] });
+    };
+    const removeEducation = (index) => {
+        const updated = [...userInput.educatinalData];
+        updated.splice(index, 1);
+        setUserInput({ ...userInput, educatinalData: updated });
+    };
+
+    const handleExperienceChange = (index, field, value) => {
+        const updated = [...userInput.experience];
+        updated[index] = { ...updated[index], [field]: value };
+        setUserInput({ ...userInput, experience: updated });
+    };
+    const addExperience = () => {
+        setUserInput({ ...userInput, experience: [...userInput.experience, { jobRole: "", company: "", jobLocation: "", duration: "", description: "" }] });
+    };
+    const removeExperience = (index) => {
+        const updated = [...userInput.experience];
+        updated.splice(index, 1);
+        setUserInput({ ...userInput, experience: updated });
+    };
+
+    const handleCustomSectionChange = (index, field, value) => {
+        const updated = [...userInput.customSections];
+        updated[index] = { ...updated[index], [field]: value };
+        setUserInput({ ...userInput, customSections: updated });
+    };
+    const addCustomSection = () => {
+        setUserInput({ ...userInput, customSections: [...userInput.customSections, { title: "", description: "" }] });
+    };
+    const removeCustomSection = (index) => {
+        const updated = [...userInput.customSections];
+        updated.splice(index, 1);
+        setUserInput({ ...userInput, customSections: updated });
     };
 
     const skillsSuggestionArray = ["HTML", "CSS", "JavaScript", "React", "Node.js", "MongoDB", "Python", "SQL", "Git", "UI/UX", "TypeScript", "Next.js", "Docker", "AWS"];
@@ -75,10 +135,10 @@ function Steps({ setUserInput, userInput, setIsResumeAdded, setResumeId }) {
         if (userInput.professionalData?.email?.trim()) filled++;
         if (userInput.professionalData?.phone?.trim()) filled++;
         if (userInput.professionalData?.location?.trim()) filled++;
-        if (userInput.educatinalData?.course?.trim()) filled++;
-        if (userInput.educatinalData?.college?.trim()) filled++;
-        if (userInput.experience?.jobRole?.trim()) filled++;
-        if (userInput.experience?.company?.trim()) filled++;
+        if (userInput.educatinalData && userInput.educatinalData.length > 0 && userInput.educatinalData[0].course?.trim()) filled++;
+        if (userInput.educatinalData && userInput.educatinalData.length > 0 && userInput.educatinalData[0].college?.trim()) filled++;
+        if (userInput.experience && userInput.experience.length > 0 && userInput.experience[0].jobRole?.trim()) filled++;
+        if (userInput.experience && userInput.experience.length > 0 && userInput.experience[0].company?.trim()) filled++;
         if (userInput.skill && userInput.skill.length > 0) filled++;
         return Math.round((filled / total) * 100);
     };
@@ -124,47 +184,141 @@ function Steps({ setUserInput, userInput, setIsResumeAdded, setResumeId }) {
                 </Grid>
             );
             case 2: return (
-                <Grid container spacing={3} className="animate-fade-in-up">
-                    <Grid item xs={12}>
-                        <Typography variant="h5" fontWeight="bold" color="white" mb={2}>Education Details</Typography>
-                    </Grid>
-                    <Grid item xs={12}>
-                        <TextField fullWidth label="Degree / Course (e.g. B.Sc. Computer Science)" variant="outlined" value={userInput.educatinalData.course} onChange={(e) => setUserInput({ ...userInput, educatinalData: { ...userInput.educatinalData, course: e.target.value } })} />
-                    </Grid>
-                    <Grid item xs={12}>
-                        <TextField fullWidth label="College / Institute" variant="outlined" value={userInput.educatinalData.college} onChange={(e) => setUserInput({ ...userInput, educatinalData: { ...userInput.educatinalData, college: e.target.value } })} />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                        <TextField fullWidth label="University" variant="outlined" value={userInput.educatinalData.university} onChange={(e) => setUserInput({ ...userInput, educatinalData: { ...userInput.educatinalData, university: e.target.value } })} />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                        <TextField fullWidth label="Graduation Year" variant="outlined" value={userInput.educatinalData.year} onChange={(e) => setUserInput({ ...userInput, educatinalData: { ...userInput.educatinalData, year: e.target.value } })} />
-                    </Grid>
-                </Grid>
+                <Box className="animate-fade-in-up">
+                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                        <Typography variant="h5" fontWeight="bold" color="white">Education Details</Typography>
+                        <Button variant="outlined" startIcon={<MdAdd />} onClick={addEducation} sx={{ borderColor: 'rgba(255,255,255,0.2)' }}>Add Education</Button>
+                    </Box>
+                    {userInput.educatinalData.map((edu, index) => (
+                        <Box key={index} sx={{ mb: 4, p: 3, border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', background: 'rgba(0,0,0,0.1)' }}>
+                            <Box display="flex" justifyContent="space-between" mb={2}>
+                                <Typography variant="subtitle1" color="text.secondary">Education #{index + 1}</Typography>
+                                {userInput.educatinalData.length > 1 && (
+                                    <IconButton color="error" onClick={() => removeEducation(index)}>
+                                        <MdDelete />
+                                    </IconButton>
+                                )}
+                            </Box>
+                            <Grid container spacing={3}>
+                                <Grid item xs={12}>
+                                    <TextField fullWidth label="Degree / Course (e.g. B.Sc. Computer Science)" variant="outlined" value={edu.course} onChange={(e) => handleEducationChange(index, 'course', e.target.value)} />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <TextField fullWidth label="College / Institute" variant="outlined" value={edu.college} onChange={(e) => handleEducationChange(index, 'college', e.target.value)} />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField fullWidth label="University" variant="outlined" value={edu.university} onChange={(e) => handleEducationChange(index, 'university', e.target.value)} />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField fullWidth label="Graduation Year" variant="outlined" value={edu.year} onChange={(e) => handleEducationChange(index, 'year', e.target.value)} />
+                                </Grid>
+                            </Grid>
+                        </Box>
+                    ))}
+                </Box>
             );
             case 3: return (
-                <Grid container spacing={3} className="animate-fade-in-up">
-                    <Grid item xs={12}>
-                        <Typography variant="h5" fontWeight="bold" color="white" mb={2}>Professional Experience</Typography>
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                        <TextField fullWidth label="Job Role" variant="outlined" value={userInput.experience.jobRole} onChange={(e) => setUserInput({ ...userInput, experience: { ...userInput.experience, jobRole: e.target.value } })} />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                        <TextField fullWidth label="Company Name" variant="outlined" value={userInput.experience.company} onChange={(e) => setUserInput({ ...userInput, experience: { ...userInput.experience, company: e.target.value } })} />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                        <TextField fullWidth label="Location" variant="outlined" value={userInput.experience.jobLocation} onChange={(e) => setUserInput({ ...userInput, experience: { ...userInput.experience, jobLocation: e.target.value } })} />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                        <TextField fullWidth label="Duration (e.g. Jan 2021 - Present)" variant="outlined" value={userInput.experience.duration} onChange={(e) => setUserInput({ ...userInput, experience: { ...userInput.experience, duration: e.target.value } })} />
-                    </Grid>
-                    <Grid item xs={12}>
-                        <TextField fullWidth multiline rows={6} label="Description & Achievements (use bullet points)" variant="outlined" value={userInput.experience.description || ""} onChange={(e) => setUserInput({ ...userInput, experience: { ...userInput.experience, description: e.target.value } })} />
-                    </Grid>
-                </Grid>
+                <Box className="animate-fade-in-up">
+                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                        <Typography variant="h5" fontWeight="bold" color="white">Professional Experience</Typography>
+                        <Button variant="outlined" startIcon={<MdAdd />} onClick={addExperience} sx={{ borderColor: 'rgba(255,255,255,0.2)' }}>Add Experience</Button>
+                    </Box>
+                    {userInput.experience.map((exp, index) => (
+                        <Box key={index} sx={{ mb: 4, p: 3, border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', background: 'rgba(0,0,0,0.1)' }}>
+                            <Box display="flex" justifyContent="space-between" mb={2}>
+                                <Typography variant="subtitle1" color="text.secondary">Experience #{index + 1}</Typography>
+                                {userInput.experience.length > 1 && (
+                                    <IconButton color="error" onClick={() => removeExperience(index)}>
+                                        <MdDelete />
+                                    </IconButton>
+                                )}
+                            </Box>
+                            <Grid container spacing={3}>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField fullWidth label="Job Role" variant="outlined" value={exp.jobRole} onChange={(e) => handleExperienceChange(index, 'jobRole', e.target.value)} />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField fullWidth label="Company Name" variant="outlined" value={exp.company} onChange={(e) => handleExperienceChange(index, 'company', e.target.value)} />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField fullWidth label="Location" variant="outlined" value={exp.jobLocation} onChange={(e) => handleExperienceChange(index, 'jobLocation', e.target.value)} />
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <TextField fullWidth label="Duration (e.g. Jan 2021 - Present)" variant="outlined" value={exp.duration} onChange={(e) => handleExperienceChange(index, 'duration', e.target.value)} />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <TextField fullWidth multiline rows={4} label="Description & Achievements (use bullet points)" variant="outlined" value={exp.description} onChange={(e) => handleExperienceChange(index, 'description', e.target.value)} />
+                                </Grid>
+                            </Grid>
+                        </Box>
+                    ))}
+                </Box>
             );
             case 4: return (
+                <Grid container spacing={3} className="animate-fade-in-up">
+                    <Grid item xs={12}>
+                        <Typography variant="h5" fontWeight="bold" color="white" mb={2}>Certifications</Typography>
+                    </Grid>
+                    <Grid item xs={12} display="flex" gap={2}>
+                        <TextField fullWidth label="Enter Certification (e.g. AWS Certified Developer)" variant="outlined" value={inputCertification} onChange={(e) => setInputCertification(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && addCertification(inputCertification)} />
+                        <Button variant="contained" color="primary" onClick={() => addCertification(inputCertification)} sx={{ px: 4 }}>Add</Button>
+                    </Grid>
+                    {userInput.certifications.length > 0 && (
+                        <Grid item xs={12} mt={2}>
+                            <Typography variant="body2" color="text.secondary" gutterBottom>Your Certifications:</Typography>
+                            <Box display="flex" flexWrap="wrap" gap={1}>
+                                {userInput.certifications.map(cert => (
+                                    <Chip 
+                                        key={cert} 
+                                        label={cert} 
+                                        onDelete={() => removeCertification(cert)} 
+                                        sx={{ 
+                                            background: 'linear-gradient(135deg, rgba(0,242,254,0.1), rgba(79,172,254,0.1))', 
+                                            color: '#00f2fe', 
+                                            border: '1px solid rgba(0,242,254,0.3)',
+                                            '& .MuiChip-deleteIcon': { color: '#00f2fe' }
+                                        }} 
+                                    />
+                                ))}
+                            </Box>
+                        </Grid>
+                    )}
+                </Grid>
+            );
+            case 5: return (
+                <Box className="animate-fade-in-up">
+                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                        <Typography variant="h5" fontWeight="bold" color="white">Custom Sections</Typography>
+                        <Button variant="outlined" startIcon={<MdAdd />} onClick={addCustomSection} sx={{ borderColor: 'rgba(255,255,255,0.2)' }}>Add Section</Button>
+                    </Box>
+                    <Typography variant="body2" color="text.secondary" mb={3}>Add any additional sections like Projects, Volunteering, Languages, etc.</Typography>
+                    
+                    {userInput.customSections.map((section, index) => (
+                        <Box key={index} sx={{ mb: 4, p: 3, border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', background: 'rgba(0,0,0,0.1)' }}>
+                            <Box display="flex" justifyContent="space-between" mb={2}>
+                                <Typography variant="subtitle1" color="text.secondary">Custom Section #{index + 1}</Typography>
+                                <IconButton color="error" onClick={() => removeCustomSection(index)}>
+                                    <MdDelete />
+                                </IconButton>
+                            </Box>
+                            <Grid container spacing={3}>
+                                <Grid item xs={12}>
+                                    <TextField fullWidth label="Section Title (e.g. Projects)" variant="outlined" value={section.title} onChange={(e) => handleCustomSectionChange(index, 'title', e.target.value)} />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <TextField fullWidth multiline rows={4} label="Section Content" variant="outlined" value={section.description} onChange={(e) => handleCustomSectionChange(index, 'description', e.target.value)} />
+                                </Grid>
+                            </Grid>
+                        </Box>
+                    ))}
+                    {userInput.customSections.length === 0 && (
+                        <Box p={4} textAlign="center" border="1px dashed rgba(255,255,255,0.2)" borderRadius="12px">
+                            <Typography color="text.secondary">No custom sections added.</Typography>
+                        </Box>
+                    )}
+                </Box>
+            );
+            case 6: return (
                 <Grid container spacing={3} className="animate-fade-in-up">
                     <Grid item xs={12}>
                         <Typography variant="h5" fontWeight="bold" color="white" mb={2}>Skills & Expertise</Typography>
@@ -210,7 +364,7 @@ function Steps({ setUserInput, userInput, setIsResumeAdded, setResumeId }) {
                     )}
                 </Grid>
             );
-            case 5: return (
+            case 7: return (
                 <Grid container spacing={3} className="animate-fade-in-up">
                     <Grid item xs={12}>
                         <Typography variant="h5" fontWeight="bold" color="white" mb={2}>Professional Summary</Typography>

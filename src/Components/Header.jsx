@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { AppBar, Box, Toolbar, Typography, Button, Container, useTheme } from '@mui/material';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../Context/AuthContext';
 
 function Header() {
     const theme = useTheme();
     const location = useLocation();
+    const { isAuthenticated, logout } = useAuth();
     const [scrolled, setScrolled] = useState(false);
 
     useEffect(() => {
@@ -18,6 +20,7 @@ function Header() {
     const navItems = [
         { label: 'Home', path: '/' },
         { label: 'Builder', path: '/resume' },
+        { label: 'LaTeX', path: '/latex-editor' },
         { label: 'History', path: '/history' }
     ];
 
@@ -105,6 +108,26 @@ function Header() {
                                 </Button>
                             );
                         })}
+                        {isAuthenticated ? (
+                            <Button 
+                                onClick={logout}
+                                variant="outlined"
+                                color="primary"
+                                sx={{ borderRadius: '12px', ml: 2 }}
+                            >
+                                Logout
+                            </Button>
+                        ) : (
+                            <Button 
+                                component={Link}
+                                to="/login"
+                                variant="contained"
+                                color="primary"
+                                sx={{ borderRadius: '12px', ml: 2, background: 'linear-gradient(90deg, #00f2fe, #4facfe)' }}
+                            >
+                                Login
+                            </Button>
+                        )}
                     </Box>
                 </Toolbar>
             </Container>

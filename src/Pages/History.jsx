@@ -1,17 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Container, Typography, Grid, Paper, IconButton, Button, Tooltip, Zoom, Modal, Backdrop, Fade } from '@mui/material';
-import { MdDelete, MdArrowBack, MdDashboard, MdRemoveRedEye, MdEdit } from 'react-icons/md';
-import { Link } from 'react-router-dom';
+import { MdDelete, MdArrowBack, MdDashboard, MdRemoveRedEye, MdEdit, MdLock } from 'react-icons/md';
+import { Link, useNavigate } from 'react-router-dom';
 import { deleteResumeAPI, getAllResumesAPI } from '../service/allAPI';
 import Swal from 'sweetalert2';
 import Preview from '../Components/Preview';
 import Edit from '../Components/Edit';
+import { useAuth } from '../Context/AuthContext';
 
 function History() {
   const [resumes, setResumes] = useState([]);
   const [previewItem, setPreviewItem] = useState(null);
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   const getAllResumes = async () => {
+    if (!isAuthenticated) return;
     try {
       const result = await getAllResumesAPI();
       setResumes(result?.data || []);
@@ -76,7 +80,41 @@ function History() {
         </Box>
 
         <Grid container spacing={4}>
-          {resumes?.length > 0 ? (
+          {!isAuthenticated ? (
+            <Grid item xs={12} className="animate-fade-in-up">
+              <Box 
+                sx={{ 
+                  textAlign: 'center', 
+                  py: 15,
+                  borderRadius: '32px',
+                  border: '1px dashed rgba(255,255,255,0.1)',
+                  background: 'rgba(255,255,255,0.02)',
+                  backdropFilter: 'blur(10px)'
+                }}
+              >
+                <Box 
+                  sx={{ 
+                    width: 80, height: 80, 
+                    borderRadius: '50%', 
+                    background: 'rgba(0, 242, 254, 0.1)', 
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    mx: 'auto', mb: 3
+                  }}
+                >
+                  <MdLock size={40} color="#00f2fe" />
+                </Box>
+                <Typography variant="h3" sx={{ mb: 2 }}>
+                  Login Required
+                </Typography>
+                <Typography variant="h6" color="text.secondary" mb={5} sx={{ fontWeight: 400 }}>
+                  You need to be logged in to view your resume history.
+                </Typography>
+                <Button component={Link} to="/login" variant="contained" color="primary" size="large" sx={{ px: 5, py: 1.5 }}>
+                  Go to Login
+                </Button>
+              </Box>
+            </Grid>
+          ) : resumes?.length > 0 ? (
             resumes.map((item, index) => (
               <Grid item xs={12} sm={6} md={4} key={item.id || index} className="animate-fade-in-up" sx={{ animationDelay: `${index * 0.1}s` }}>
                 <Paper
@@ -148,7 +186,13 @@ function History() {
                   >
                     <Tooltip title="Preview & Download" TransitionComponent={Zoom}>
                       <IconButton 
-                        onClick={() => setPreviewItem(item)}
+                        onClick={() => {
+                          if (item.latexCode) {
+                            navigate('/latex-editor', { state: { resume: item } });
+                          } else {
+                            setPreviewItem(item);
+                          }
+                        }}
                         sx={{ 
                           width: 50, height: 50,
                           bgcolor: 'rgba(0, 242, 254, 0.1)', 
@@ -161,25 +205,42 @@ function History() {
                       </IconButton>
                     </Tooltip>
 
-                    <Edit 
-                      resumeId={item.id} 
-                      setUserInput={getAllResumes} 
-                      customButton={
-                        <Tooltip title="Edit Resume" TransitionComponent={Zoom}>
-                          <IconButton 
-                            sx={{ 
-                              width: 50, height: 50,
-                              bgcolor: 'rgba(255, 255, 255, 0.1)', 
-                              color: 'white', 
-                              border: '1px solid rgba(255, 255, 255, 0.3)',
-                              '&:hover': { bgcolor: 'white', color: 'black' } 
-                            }}
-                          >
-                            <MdEdit size={24} />
-                          </IconButton>
-                        </Tooltip>
-                      }
-                    />
+                    {item.latexCode ? (
+                      <Tooltip title="Edit LaTeX Resume" TransitionComponent={Zoom}>
+                        <IconButton 
+                          onClick={() => navigate('/latex-editor', { state: { resume: item } })}
+                          sx={{ 
+                            width: 50, height: 50,
+                            bgcolor: 'rgba(255, 255, 255, 0.1)', 
+                            color: 'white', 
+                            border: '1px solid rgba(255, 255, 255, 0.3)',
+                            '&:hover': { bgcolor: 'white', color: 'black' } 
+                          }}
+                        >
+                          <MdEdit size={24} />
+                        </IconButton>
+                      </Tooltip>
+                    ) : (
+                      <Edit 
+                        resumeId={item.id} 
+                        setUserInput={getAllResumes} 
+                        customButton={
+                          <Tooltip title="Edit Resume" TransitionComponent={Zoom}>
+                            <IconButton 
+                              sx={{ 
+                                width: 50, height: 50,
+                                bgcolor: 'rgba(255, 255, 255, 0.1)', 
+                                color: 'white', 
+                                border: '1px solid rgba(255, 255, 255, 0.3)',
+                                '&:hover': { bgcolor: 'white', color: 'black' } 
+                              }}
+                            >
+                              <MdEdit size={24} />
+                            </IconButton>
+                          </Tooltip>
+                        }
+                      />
+                    )}
 
                     <Tooltip title="Delete Resume" TransitionComponent={Zoom}>
                       <IconButton 

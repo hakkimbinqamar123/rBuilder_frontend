@@ -18,19 +18,21 @@ function Form() {
       linkedIn: "",
       portfolio: ""
     },
-    educatinalData: {
+    educatinalData: [{
       course: "",
       college: "",
       university: "",
       year: ""
-    },
-    experience: {
+    }],
+    experience: [{
       jobRole: "",
       company: "",
       jobLocation: "",
       duration: "",
       description: ""
-    },
+    }],
+    certifications: [],
+    customSections: [],
     skill: [],
     summary: ""
   });
